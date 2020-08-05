@@ -3,34 +3,35 @@ program test_ordering
    use fsparse
    implicit none
    integer(int32) :: x=123456789, y=362436069, z=521288629, w=88675123
-   integer(int32) :: i,j,neq,imax32,thr,info
-   integer(int32) :: k
-   integer(int64) :: n,nnz,cnnz,nfull
+   integer(int32) :: i,j,imax32,thr,info
+   integer(int32) :: k,n
+   integer(int64) :: nnz,cnnz,nfull
    real(real64) :: ratio,btime,etime
    integer(int32),allocatable :: ia(:)
    integer(int32),allocatable :: ja(:)
    real(real64),allocatable :: a(:)
    integer(int32) :: ordalg
 
-   type(sparse_graph_32) :: graph
    integer(int32) :: gsz,nthr
    integer(int64) :: t1,t2,trate
    real(real64) :: options(0:128),dble_null
-   integer(int32),allocatable :: perm(:),iperm(:)
-   
-   ! parameters
-   imax32 = huge(imax32)
-!   neq = 1000000
-!   n = neq
-!   nnz = 2247483647_int64
-!   nfull = n*(n+1)/2
-!   ratio = dble(nnz)/dble(nfull)
-!   thr = int(imax32*ratio*1.05)
 
-   call get_param(neq,nnz,nthr)
-   n = neq
+#if defined(USE_METIS_64) || defined(USE_MTMETIS_64)
+   type(sparse_graph_64) :: graph
+   integer(int64) :: neq
+   integer(int64),allocatable :: perm(:),iperm(:)
+#else
+   type(sparse_graph_32) :: graph
+   integer(int32) :: neq
+   integer(int32),allocatable :: perm(:),iperm(:)
+#endif
+
+   ! parameters
+   call get_param(n,nnz,nthr)
+   neq = n
    nfull = n*(n+1)/2
    ratio = dble(nnz)/dble(nfull-neq)
+   imax32 = huge(imax32)
    thr = int(imax32*ratio*1.5)
 
    print '(A,I14)'  ,'neq          =',n
@@ -78,40 +79,49 @@ program test_ordering
    ! start ordering
    allocate(perm(neq),iperm(neq))
    call system_clock(t1)
-   call make_sparse_graph(neq,ia,ja,graph)
+   call make_sparse_graph(n,ia,ja,graph)
    call system_clock(t2,trate)
    print *,'graph elapsed = ',dble(t2-t1)/trate
 
    ! AMD
-   print '(A)','AMD'
+   print '(A,X,I0)','AMD',kind(perm)
    call system_clock(t1)
    call ordering_amd(graph,perm,iperm)
    call system_clock(t2,trate)
    print *,'ordering elapsed = ',dble(t2-t1)/trate
+   print *,'checking perm and iperm'
+   call check_permutation(neq,perm,iperm)
 
    ! AMDBAR
-   print '(A)','AMD BAR'
+   print '(A,X,I0)','AMD BAR',kind(perm)
    call system_clock(t1)
    call ordering_amd(graph,perm,iperm, use_amdbar=.true.)
    call system_clock(t2,trate)
    print *,'ordering elapsed = ',dble(t2-t1)/trate
+   print *,'checking perm and iperm'
+   call check_permutation(neq,perm,iperm)
 
    ! METIS 5
-   !print '(A)','METIS 5'
-   !call system_clock(t1)
-   !call ordering_metis(graph,nthr,perm,iperm)
-   !call system_clock(t2,trate)
-   !print *,'ordering elapsed = ',dble(t2-t1)/trate
+#if defined(USE_METIS_32) || defined(USE_METIS_64)
+   print '(A,X,I0)','METIS5',kind(perm)
+   call system_clock(t1)
+   call ordering_metis(graph,perm,iperm)
+   call system_clock(t2,trate)
+   print *,'ordering elapsed = ',dble(t2-t1)/trate
+   print *,'checking perm and iperm'
+   call check_permutation(neq,perm,iperm)
+#endif
 
    ! MTMETIS
-   !print '(A)','MT METIS'
-   !call system_clock(t1)
-   !call ordering_mtmetis(graph,nthr,perm,iperm)
-   !call system_clock(t2,trate)
-   !print *,'ordering elapsed = ',dble(t2-t1)/trate
-
-   ! checks
+#if defined(USE_MTMETIS_32) || defined(USE_MTMETIS_64)
+   print '(A,X,I0)','MT-METIS',kind(perm)
+   call system_clock(t1)
+   call ordering_mtmetis(graph,nthr,perm,iperm)
+   call system_clock(t2,trate)
+   print *,'ordering elapsed = ',dble(t2-t1)/trate
+   print *,'checking perm and iperm'
    call check_permutation(neq,perm,iperm)
+#endif
 
    print *,'done'
    
@@ -139,13 +149,13 @@ function genrand31() result(r)
    r = abs(w)
 end function genrand31
 
-subroutine get_param(neq,nnz,nthr)
-   integer(int32),intent(inout) :: neq
+subroutine get_param(n,nnz,nthr)
+   integer(int32),intent(inout) :: n
    integer(int64),intent(inout) :: nnz
    integer(int32),intent(inout) :: nthr
    integer :: argc,io
    character(len=32) :: argv
-   neq = 1000000
+   n = 1000000
    nnz = 1500000_int64
    nthr = 1 !ORD_METIS
    argc = command_argument_count()
@@ -154,7 +164,7 @@ subroutine get_param(neq,nnz,nthr)
       stop
    end if
    call get_command_argument(1,argv)
-   read(argv,*,iostat=io) neq
+   read(argv,*,iostat=io) n
    if(io/=0) then
       print *,'Invalid neq'
       stop

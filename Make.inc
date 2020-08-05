@@ -35,12 +35,20 @@ endif
 #
 # options
 #
-ifdef USE_MTMETIS
-  FCFLAGS += -D USE_MTMETIS
+ifdef USE_MTMETIS_32
+  FCFLAGS += -D USE_MTMETIS_32
   LDFLAGS += -lmtmetis -lwildriver
 endif
-ifdef USE_METIS
-  FCFLAGS += -D USE_METIS
+ifdef USE_MTMETIS_64
+  FCFLAGS += -D USE_MTMETIS_64
+  LDFLAGS += -lmtmetis -lwildriver
+endif
+ifdef USE_METIS_32
+  FCFLAGS += -D USE_METIS_32
+  LDFLAGS += -lmetis
+endif
+ifdef USE_METIS_64
+  FCFLAGS += -D USE_METIS_64
   LDFLAGS += -lmetis
 endif
 
