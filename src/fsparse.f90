@@ -46,6 +46,22 @@ interface
 end interface
 #endif
 
+! AMD and AMDBAR
+interface
+   SUBROUTINE AMD(N, PE, IW, LEN, IWLEN, PFREE, NV, NEXT, &
+                  LAST, HEAD, ELEN, DEGREE, NCMPA, W)
+     INTEGER N, IWLEN, PFREE, NCMPA, IW (IWLEN), PE (N), &
+             DEGREE (N), NV (N), NEXT (N), LAST (N), HEAD (N), &
+             ELEN (N), W (N), LEN (N)
+   END SUBROUTINE AMD
+   SUBROUTINE AMDBAR(N, PE, IW, LEN, IWLEN, PFREE, NV, NEXT, &
+                     LAST, HEAD, ELEN, DEGREE, NCMPA, W)
+     INTEGER N, IWLEN, PFREE, NCMPA, IW (IWLEN), PE (N), &
+             DEGREE (N), NV (N), NEXT (N), LAST (N), HEAD (N), &
+             ELEN (N), W (N), LEN (N)
+   END SUBROUTINE AMDBAR
+end interface
+
 contains
 
 ! MT METIS 0.7.2 interface
@@ -90,6 +106,44 @@ subroutine ordering_metis(graph,nthr,perm,iperm)
    ret = METIS_NodeND(graph%n, graph%xadj, graph%adjncy, c_null_ptr, options, perm, iperm)
 end subroutine ordering_metis
 #endif
+
+! AMD
+subroutine ordering_amd(graph,perm,iperm,use_amdbar)
+   type(sparse_graph_32),intent(inout) :: graph
+   integer(int32),intent(inout) :: perm(:),iperm(:)
+   logical,intent(in),optional :: use_amdbar
+
+   logical :: call_amdbar
+   integer(int32) :: j,p,n,nnz,iwlen,pfree,ncmpa
+   integer(int32),allocatable :: PE(:),LENG(:),DEGREE(:),NV(:),NEXT(:),HEAD(:),W(:),IW(:)
+
+   call_amdbar = .false.
+   if(present(use_amdbar)) call_amdbar=use_amdbar
+
+   n = graph%n
+   nnz = graph%xadj(n+1)-1
+   pfree = nnz+1
+   !iwlen = int(real(pfree)*1.25d0)
+   iwlen = max( int(dble(nnz+1)*1.25d0), (nnz+1)+2*n )
+   allocate(PE(n+1),LENG(n),DEGREE(n),NV(n),NEXT(n),HEAD(n),W(n),IW(iwlen))
+   do j=1,n+1
+      PE(j) = graph%xadj(j)
+   end do
+   do j=1,n
+      LENG(j) = graph%xadj(j+1) - graph%xadj(j)
+   end do
+   do p=1,nnz
+      IW(p) = graph%adjncy(p)
+   end do
+
+   if(call_amdbar) then
+      call AMDBAR(n,PE,IW,LENG,iwlen,pfree,NV,NEXT, perm,HEAD,iperm,DEGREE,ncmpa,W)
+   else
+      call AMD(n,PE,IW,LENG,iwlen,pfree,NV,NEXT, perm,HEAD,iperm,DEGREE,ncmpa,W)
+   end if
+
+   deallocate(LENG,DEGREE,NV,NEXT,HEAD,W,IW)
+end subroutine ordering_amd
 
 ! graph tools
 subroutine init_sparse_graph(graph)

@@ -25,11 +25,11 @@ SRCDIR := $(ROOTDIR)src
 ifeq ($(F_COMPILER),intel)
   FC = ifort
   FCFLAGS = -O3 -fpp -qopenmp -I$(SRCDIR) -I$(LIBDIR)
-  LDFLAGS = -I$(SRCDIR) -I$(LIBDIR) -L$(SRCDIR) -L$(LIBDIR) -lfsparse
+  LDFLAGS = -I$(SRCDIR) -I$(LIBDIR) -L$(SRCDIR) -L$(LIBDIR) -lfsparse -lamd
 else
   FC = gfortran
   FCFLAGS = -O3 -cpp -fopenmp -I$(SRCDIR) -I$(LIBDIR)
-  LDFLAGS = -I$(SRCDIR) -I$(LIBDIR) -L$(SRCDIR) -L$(LIBDIR) -lfsparse
+  LDFLAGS = -I$(SRCDIR) -I$(LIBDIR) -L$(SRCDIR) -L$(LIBDIR) -lfsparse -lamd
 endif
 
 #

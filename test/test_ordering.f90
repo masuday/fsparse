@@ -82,19 +82,33 @@ program test_ordering
    call system_clock(t2,trate)
    print *,'graph elapsed = ',dble(t2-t1)/trate
 
+   ! AMD
+   print '(A)','AMD'
+   call system_clock(t1)
+   call ordering_amd(graph,perm,iperm)
+   call system_clock(t2,trate)
+   print *,'ordering elapsed = ',dble(t2-t1)/trate
+
+   ! AMDBAR
+   print '(A)','AMD BAR'
+   call system_clock(t1)
+   call ordering_amd(graph,perm,iperm, use_amdbar=.true.)
+   call system_clock(t2,trate)
+   print *,'ordering elapsed = ',dble(t2-t1)/trate
+
+   ! METIS 5
+   !print '(A)','METIS 5'
+   !call system_clock(t1)
+   !call ordering_metis(graph,nthr,perm,iperm)
+   !call system_clock(t2,trate)
+   !print *,'ordering elapsed = ',dble(t2-t1)/trate
+
    ! MTMETIS
    !print '(A)','MT METIS'
    !call system_clock(t1)
    !call ordering_mtmetis(graph,nthr,perm,iperm)
    !call system_clock(t2,trate)
    !print *,'ordering elapsed = ',dble(t2-t1)/trate
-
-   ! METIS 5
-   print '(A)','METIS 5'
-   call system_clock(t1)
-   call ordering_metis(graph,nthr,perm,iperm)
-   call system_clock(t2,trate)
-   print *,'ordering elapsed = ',dble(t2-t1)/trate
 
    ! checks
    call check_permutation(neq,perm,iperm)
