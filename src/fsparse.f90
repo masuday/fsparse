@@ -251,12 +251,12 @@ end subroutine ordering_metis_64
 ! Intel MKL PARDISO
 #if defined(USE_MKL_PARDISO_32)
 subroutine ordering_mkl_pardiso_32(neq,ia,ja,perm,iperm,msglev)
-   integer(int32),intent(in) :: neq,ia(:),ja(:),msglev
+   integer(int32),intent(inout) :: neq,ia(:),ja(:),msglev
    integer(int32),intent(inout) :: perm(:),iperm(:)
 
    TYPE(MKL_PARDISO_HANDLE) :: PT(64)
    integer :: i,iparm(64),mtype,maxfct,mnum,phase,nrhs,error
-   real(real64) :: a(1),rhs(1),sol(1)
+   real(real64) :: a(neq),rhs(1),sol(1)
 
    ! symmetric positive definite
    mtype = 2
@@ -275,11 +275,11 @@ subroutine ordering_mkl_pardiso_32(neq,ia,ja,perm,iperm,msglev)
    mnum = 1
    phase = 11
    nrhs = 0
-   call pardiso(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
+   call pardiso_d(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
 
    ! terminate the library
    phase = -1
-   call pardiso(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
+   call pardiso_d(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
 end subroutine ordering_mkl_pardiso_32
 #endif
 

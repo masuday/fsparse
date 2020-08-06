@@ -12,7 +12,7 @@ program test_ordering
    real(real64),allocatable :: a(:)
    integer(int32) :: ordalg
 
-   integer(int32) :: gsz,nthr
+   integer(int32) :: gsz,nthr,msglev
    integer(int64) :: t1,t2,trate
    real(real64) :: options(0:128),dble_null
 
@@ -33,6 +33,7 @@ program test_ordering
    ratio = dble(nnz)/dble(nfull-neq)
    imax32 = huge(imax32)
    thr = int(imax32*ratio*1.5)
+   msglev = 1
    x = x + seed
    y = y + seed
    z = z + seed
@@ -110,7 +111,7 @@ program test_ordering
 #if defined(USE_MKL_PARDISO_32)
    print '(A,X,I0)','MKL-PARDISO',kind(perm)
    call system_clock(t1)
-   call ordering_mkl_pardiso(n,ia,ja,perm,iperm,1)
+   call ordering_mkl_pardiso(n,ia,ja,perm,iperm,msglev)
    call system_clock(t2,trate)
    print *,'ordering elapsed = ',dble(t2-t1)/trate
    print *,'checking perm and iperm'
