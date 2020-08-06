@@ -62,7 +62,7 @@ endif
 # LAPACK and BLAS
 #
 ifeq ($(F_COMPILER),intel)
-  LDFLAG += -mkl
+  LDFLAGS += -mkl
 else
-  LDFLAG += -llapak -lrefblas
+  LDFLAGS += -llapak -lrefblas
 endif
