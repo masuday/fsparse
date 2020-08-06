@@ -414,12 +414,6 @@ subroutine get_graph_32(n, ia, ja, xadj, adjncy, info)
       xadj(i+1) = xadj(i) + cnt(i)
       cnt(i) = 0
    end do
-   ! set xadj and clear cnt(:)
-   xadj(1) = 1
-   do i=1,n
-      xadj(i+1) = xadj(i) + cnt(i)
-      cnt(i) = 0
-   end do
 
    ! set adjncy
    do i=1,n
@@ -467,12 +461,6 @@ subroutine get_graph_64(n, ia, ja, xadj, adjncy, info)
       end do
    end do
 
-   ! set xadj and clear cnt(:)
-   xadj(1) = 1
-   do i=1,n
-      xadj(i+1) = xadj(i) + cnt(i)
-      cnt(i) = 0
-   end do
    ! set xadj and clear cnt(:)
    xadj(1) = 1
    do i=1,n
