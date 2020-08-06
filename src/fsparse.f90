@@ -140,6 +140,14 @@ interface ordering_metis
 end interface ordering_metis
 #endif
 
+#if defined(USE_MKL_PARDISO_32)
+#include "mkl_pardiso.fi"
+
+interface ordering_mkl_pardiso
+   module procedure ordering_mkl_pardiso_32
+end interface ordering_mkl_pardiso
+#endif
+
 interface ordering_amd
    module procedure ordering_amd_32, ordering_amd_64
 end interface ordering_amd
@@ -238,6 +246,41 @@ subroutine ordering_metis_64(graph,perm,iperm)
    vwgt(1) = 0
    ret = METIS_NodeND_64(graph%n, graph%xadj, graph%adjncy, vwgt, options, perm, iperm)
 end subroutine ordering_metis_64
+#endif
+
+! Intel MKL PARDISO
+#if defined(USE_MKL_PARDISO_32)
+subroutine ordering_mkl_pardiso_32(neq,ia,ja,perm,iperm,msglev)
+   integer(int32),intent(in) :: neq,ia(:),ja(:),msglev
+   integer(int32),intent(inout) :: perm(:),iperm(:)
+
+   TYPE(MKL_PARDISO_HANDLE) :: PT(64)
+   integer :: i,iparm(64),mtype,maxfct,mnum,phase,nrhs,error
+   real(real64) :: a(1),rhs(1),sol(1)
+
+   ! symmetric positive definite
+   mtype = 2
+   do i=1,64
+      iparm(i) = 0
+      pt(i)%dummy = 0
+   end do
+   iparm(1) = 1 ! no solver default
+   iparm(2) = 3 ! fill-in reordering from parallel METIS
+   iparm(5) = 2 ! get fill-in reducing permutation
+   iparm(18) = -1 ! Output: number of nonzeros in the factor LU
+   iparm(27) = 1 ! check ia and ja
+
+   ! ordering
+   maxfct = 1
+   mnum = 1
+   phase = 11
+   nrhs = 0
+   call pardiso(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
+
+   ! terminate the library
+   phase = -1
+   call pardiso(pt,maxfct,mnum,mtype,phase,neq,a,ia,ja,perm,nrhs,iparm,msglev,rhs,sol,error)
+end subroutine ordering_mkl_pardiso_32
 #endif
 
 ! AMD

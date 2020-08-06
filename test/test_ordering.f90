@@ -106,6 +106,17 @@ program test_ordering
    call check_permutation(neq,perm,iperm)
 #endif
 
+   ! MTMETIS
+#if defined(USE_MKL_PARDISO_32)
+   print '(A,X,I0)','MKL-PARDISO',kind(perm)
+   call system_clock(t1)
+   call ordering_mkl_pardiso(n,ia,ja,perm,iperm,1)
+   call system_clock(t2,trate)
+   print *,'ordering elapsed = ',dble(t2-t1)/trate
+   print *,'checking perm and iperm'
+   call check_permutation(neq,perm,iperm)
+#endif
+
    print *,'done'
    
 contains

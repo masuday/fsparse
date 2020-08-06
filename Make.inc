@@ -52,6 +52,12 @@ ifdef USE_METIS_64
   LDFLAGS += -lmetis
 endif
 
+# works only with ifort so far
+ifdef USE_MKL_PARDISO_32
+  FCFLAGS += -D USE_MKL_PARDISO_32
+  #LDFLAGS += -mkl
+endif
+
 #
 # LAPACK and BLAS
 #
