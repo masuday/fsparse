@@ -25,6 +25,8 @@ $ USE_MTMETIS_64 make
 $ USE_MKL_PARDISO_32 make
 ```
 
+To use Intel MKL PARDISO, you must copy `$MKLROOT/include/mkl_pardiso.fi` to `src/`.
+
 # License
 
 See `LICENSE` for this library and `AMD/License.txt` for the AMD library.
